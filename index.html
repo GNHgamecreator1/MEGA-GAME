@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TITUS - GOON FIGHTER</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+  <style>
+    body { margin:0; background:#111; font-family: Impact; }
+    #game { width: 800px; height: 600px; margin: 20px auto; border: 4px solid gold; }
+    .info { color: gold; text-align: center; font-size: 24px; }
+  </style>
+</head>
+<body>
+  <div class="info">TITUS | A = Jab | ↑+A = Uppercut | S = Machine Gun | D = Chokehold</div>
+  <div id="game"></div>
+
+  <script>
+    const config = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 600,
+      parent: 'game',
+      physics: { default: 'arcade', gravity: { y: 0 } },
+      scene: { preload, create, update }
+    };
+
+    const game = new Phaser.Game(config);
+    let player, keys, anims = {}, currentAnim = 'idle';
+
+    function preload() {
+      for (let i = 8243; i <= 8827; i++) {
+        const num = i.toString().padStart(4, '0');
+        this.load.image(`frame_${num}`, `assets/titus/bmframe_noesisdupname_${i}.png`);
+      }
+    }
+
+    function create() {
+      player = this.physics.add.sprite(400, 300, 'frame_8243').setScale(3).setDepth(10);
+      player.body.setSize(60, 120).setOffset(70, 50);
+
+      keys = this.input.keyboard.addKeys('A,S,D,UP,LEFT,RIGHT');
+
+      const groups = [
+        { name: 'motorcycle_intro', start: 8243, end: 8287, fps: 12 },
+        { name: 'idle', start: 8288, end: 8295, fps: 8 },
+        { name: 'walk', start: 8296, end: 8301, fps: 10 },
+        { name: 'jab', start: 8302, end: 8309, fps: 14 },
+        { name: 'uppercut', start: 8310, end: 8320, fps: 16 },
+        { name: 'machine_gun', start: 8321, end: 8380, fps: 30 },
+        { name: 'chokehold', start: 8381, end: 8420, fps: 12 },
+        { name: 'hurt', start: 8421, end: 8428, fps: 12 },
+        { name: 'knockdown', start: 8429, end: 8450, fps: 10 },
+        { name: 'victory', start: 8451, end: 8470, fps: 10 },
+      ];
+
+      groups.forEach(g => {
+        const frames = [];
+        for (let i = g.start; i <= g.end; i++) {
+          frames.push({ key: `frame_${i}` });
+        }
+        this.anims.create({
+          key: g.name,
+          frames: frames,
+          frameRate: g.fps,
+          repeat: g.name === 'idle' || g.name === 'walk' ? -1 : 0
+        });
+      });
+
+      player.anims.play('idle', true);
+    }
+
+    function update() {
+      const speed = 5;
+
+      if (keys.LEFT.isDown) player.x -= speed;
+      if (keys.RIGHT.isDown) player.x += speed;
+
+      if (keys.A.isDown && !player.anims.isPlaying) {
+        if (keys.UP.isDown) playAnim('uppercut');
+        else playAnim('jab');
+      } else if (keys.S.isDown && !player.anims.isPlaying) {
+        playAnim('machine_gun');
+      } else if (keys.D.isDown && !player.anims.isPlaying) {
+        playAnim('chokehold');
+      } else if (!player.anims.isPlaying && !['idle', 'walk'].includes(currentAnim)) {
+        playAnim('idle');
+      }
+
+      if ((keys.LEFT.isDown || keys.RIGHT.isDown) && currentAnim !== 'walk' && !player.anims.isPlaying) {
+        playAnim('walk');
+      } else if (!keys.LEFT.isDown && !keys.RIGHT.isDown && currentAnim === 'walk') {
+        playAnim('idle');
+      }
+    }
+
+    function playAnim(name) {
+      if (currentAnim !== name) {
+        currentAnim = name;
+        player.anims.play(name, true);
+        player.once('animationcomplete', () => {
+          if (!['idle', 'walk'].includes(name)) {
+            currentAnim = 'idle';
+            player.anims.play('idle', true);
+          }
+        });
+      }
+    }
+  </script>
+</body>
+</html>
