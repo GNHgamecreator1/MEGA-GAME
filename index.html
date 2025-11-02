@@ -1,9 +1,87 @@
 <!DOCTYPE html>
 <html>
-<head><title>MEGA-GAME TEST</title></head>
-<body style="background:#000;color:#0f0;font-family:Courier;text-align:center;padding:50px">
-<h1>MEGA-GAME IS ALIVE!</h1>
-<p>If you see this, Pages works. Next: Add the full OS + fighter.</p>
-<img src="assets/titus/bmframe_noesisdupname_8243.png" alt="TITUS Test" style="border:2px solid #0f0">
+<head>
+  <meta charset="utf-8">
+  <title>MEGA-GAME: FIGHT AGAIN</title>
+  <style>
+    body{margin:0;background:#000;overflow:hidden;font-family:Courier}
+    #game{border:4px solid #0f0;margin:20px auto;display:block;image-rendering:pixelated}
+    #ui{position:absolute;top:10px;left:10px;color:#0f0;z-index:10}
+    .btn{background:#000;color:#0f0;border:2px solid #0f0;padding:8px;margin:2px;cursor:pointer;font-family:Courier}
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <button class="btn" onclick="location.reload()">RESTART</button>
+    <span>MEGA-GAME OS</span>
+  </div>
+  <canvas id="game" width="256" height="224"></canvas>
+
+<script src="https://cdn.jsdelivr.net/gh/bfirsh/jsnes@master/dist/jsnes.min.js"></script>
+<script>
+const nes = new JSNES({
+  'ui': document.getElementById('game').JSNESUI({ "Homebrew": {} })
+});
+
+// === LOAD FIGHT AGAIN ROM FROM rom.txt ===
+const romData = "$(cat rom.txt)";
+nes.loadROM(atob(romData));
+
+// === TROLLFACE LOGIN SCREEN ===
+let loginDone = false;
+const login = document.createElement('div');
+login.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:#000;color:#0f0;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:100;font-family:Courier';
+login.innerHTML = `
+  <h1 style="font-size:48px;margin-bottom:20px">TROLLFACE SECURITY</h1>
+  <img src="https://i.imgur.com/9n3x5fE.png" width="120" style="margin-bottom:20px">
+  <input id="u" placeholder="ENTER USERNAME" style="margin:10px;padding:12px;background:#000;color:#0f0;border:2px solid #0f0;width:250px;font-size:16px">
+  <button onclick="startGame()" style="padding:12px 24px;background:#000;color:#0f0;border:2px solid #0f0;cursor:pointer;font-size:16px">LOGON</button>
+`;
+document.body.appendChild(login);
+
+function startGame() {
+  const user = document.getElementById('u').value.trim();
+  if (!user) {
+    alert('USERNAME REQUIRED!');
+    return;
+  }
+  login.remove();
+  loginDone = true;
+  document.getElementById('ui').style.display = 'block';
+  nes.ui.run();
+}
+
+// Hide UI until login
+document.getElementById('ui').style.display = 'none';
+
+// === MODS: TROLLFACE + BONZI + TITUS PLACEHOLDER ===
+let frameCount = 0;
+nes.onFrame = function(frame) {
+  if (!loginDone) return;
+  frameCount++;
+
+  // Trollface on title screen (frame 120)
+  if (frameCount === 120) {
+    const f = [0xFF0000,0x00FF00,0x0000FF,0xFFFF00,0x00FFFF,0xFF00FF,0xFFFFFF,0x000000];
+    for (let i = 0; i < 8; i++) 
+      for (let j = 0; j < 8; j++) 
+        frame[(40+i)*256 + (40+j)] = f[(i+j)%8];
+  }
+
+  // Bonzi Buddy in corner
+  const p = 0xFF00FF;
+  for (let i = 0; i < 30; i++) {
+    frame[190*256 + 210 + i] = p;
+    frame[(190+i)*256 + 210] = p;
+  }
+
+  // TITUS PLACEHOLDER (we'll replace Ryu later)
+  if (nes.cpu.mem[0x1000] === 0x01) {
+    for (let y = 50; y < 150; y++) 
+      for (let x = 50; x < 110; x++) 
+        frame[y*256 + x] = 0x00FF00;
+  }
+};
+</script>
 </body>
 </html>
