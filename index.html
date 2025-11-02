@@ -1,65 +1,9 @@
-cat > index.html << 'EOF'
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>MEGA-GAME: FIGHT AGAIN</title>
-  <style>
-    body{margin:0;background:#000;overflow:hidden;font-family:Courier}
-    #game{border:4px solid #0f0;margin:20px auto;display:block;image-rendering:pixelated}
-    #ui{position:absolute;top:10px;left:10px;color:#0f0}
-    .btn{background:#000;color:#0f0;border:2px solid #0f0;padding:8px;margin:2px;cursor:pointer}
-  </style>
-</head>
-<body>
-  <div id="ui">
-    <button class="btn" onclick="location.reload()">RESTART</button>
-    <span>MEGA-GAME OS</span>
-  </div>
-  <canvas id="game" width="256" height="224"></canvas>
-
-<script src="https://cdn.jsdelivr.net/gh/bfirsh/jsnes@master/dist/jsnes.min.js"></script>
-<script>
-const nes = new JSNES({
-  'ui': document.getElementById('game').JSNESUI({ "Homebrew": {} })
-});
-
-// ROM DATA FROM rom.txt
-const romData = "$(cat rom.txt)";
-nes.loadROM(atob(romData));
-
-// === MODS ===
-let frameCount = 0;
-nes.onFrame = function(frame) {
-  frameCount++;
-  if (frameCount === 120) drawTrollface(frame);
-  if (nes.cpu.mem[0x1000] === 0x01) injectTitus(frame);
-  drawBonzi(frame);
-};
-
-function drawTrollface(frame) {
-  const face = [0xFF0000,0x00FF00,0x0000FF,0xFFFF00,0x00FFFF,0xFF00FF,0xFFFFFF,0x000000];
-  for (let i = 0; i < 8; i++) 
-    for (let j = 0; j < 8; j++) 
-      frame[(40+i)*256 + (40+j)] = face[(i+j)%8];
-}
-
-function injectTitus(frame) {
-  for (let y = 50; y < 150; y++) 
-    for (let x = 50; x < 110; x++) 
-      frame[y*256 + x] = 0x00FF00;
-}
-
-function drawBonzi(frame) {
-  const p = 0xFF00FF;
-  for (let i = 0; i < 30; i++) {
-    frame[190*256 + 210 + i] = p;
-    frame[(190+i)*256 + 210] = p;
-  }
-}
-
-nes.ui.run();
-</script>
+<head><title>MEGA-GAME TEST</title></head>
+<body style="background:#000;color:#0f0;font-family:Courier;text-align:center;padding:50px">
+<h1>MEGA-GAME IS ALIVE!</h1>
+<p>If you see this, Pages works. Next: Add the full OS + fighter.</p>
+<img src="assets/titus/bmframe_noesisdupname_8243.png" alt="TITUS Test" style="border:2px solid #0f0">
 </body>
 </html>
-EOF
