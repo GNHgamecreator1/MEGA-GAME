@@ -17,12 +17,13 @@
       'ui': document.getElementById('game').JSNESUI({ "Homebrew": {} })
     });
 
-    // LOAD ROM FROM rom.txt
-    const romData = "$(cat rom.txt)";
-    nes.loadROM(atob(romData));
-
-    // START IMMEDIATELY
-    nes.ui.run();
+    fetch('rom.txt')
+      .then(r => r.text())
+      .then(data => {
+        nes.loadROM(atob(data.trim()));
+        nes.ui.run();
+      })
+      .catch(e => alert('ROM load failed: ' + e));
   </script>
 </body>
 </html>
