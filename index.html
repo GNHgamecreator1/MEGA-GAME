@@ -2,196 +2,198 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>TROLLFACE SECURITY</title>
+  <title>TROLLFACE SECURITY FIGHTER</title>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
-    * { margin:0; padding:0; overflow:hidden; }
-    body { background:#000; font-family: 'Courier New'; color: lime; }
-    canvas { image-rendering: pixelated; }
-    #boot, #login, #desktop, #kiosk, #game { position:absolute; top:0; left:0; width:100%; height:100%; display:none; }
-    .btn { background:#000; color:lime; border:2px solid lime; padding:10px; margin:5px; cursor:pointer; }
-    .window { background:#000; border:4px double lime; padding:20px; position:absolute; width:400px; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
-    .cloud { position:absolute; filter: brightness(0.8); }
+    *{margin:0;padding:0;overflow:hidden}body{background:#000;color:#0f0;font-family:'Courier New'}
+    canvas{image-rendering:pixelated;border:4px solid #0f0}
+    .screen{display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:#000;color:#0f0;text-align:center}
+    .active{display:block}.btn{background:#000;color:#0f0;border:2px solid #0f0;padding:10px;margin:5px;cursor:pointer}
+    #game{z-index:1}#os{z-index:100}
   </style>
 </head>
 <body>
 
-<!-- BOOT SCREEN -->
-<div id="boot">
-  <img src="https://i.imgur.com/7g5mR8K.png" style="width:200px; margin:100px auto; display:block;">
-  <audio id="ibmTune" src="https://cdn.freesound.org/previews/612/612551_5674468-lq.mp3" autoplay loop></audio>
-</div>
-
-<!-- LOGIN SCREEN -->
-<div id="login" class="window">
-  <h1>TROLLFACE SECURITY</h1>
-  <img src="https://i.imgur.com/9n3x5fE.png" width="100"><br><br>
-  <input type="text" id="username" placeholder="Username" class="btn"><br>
-  <input type="password" id="password" placeholder="Password" class="btn"><br>
-  <button onclick="login()" class="btn">LOGON</button>
-  <audio id="trollTune" src="https://cdn.freesound.org/previews/612/612552_5674468-lq.mp3"></audio>
-  <audio id="baldiTune" src="https://cdn.freesound.org/previews/612/612553_5674468-lq.mp3"></audio>
-</div>
-
-<!-- DESKTOP -->
-<div id="desktop">
-  <div style="position:absolute; top:10px; left:10px;">
-    <button class="btn" onclick="showKiosk()">FLIGHT KIOSK</button>
-    <button class="btn" onclick="uploadChar()">UPLOAD CHARACTER</button>
-    <input type="file" id="charZip" accept=".zip" style="display:none">
-    <button class="btn" onclick="testSecurity()">TEST SECURITY</button>
+<div id="os">
+  <div id="boot" class="screen active"><h1>IBM BOOT</h1><p>Initializing...</p></div>
+  <div id="login" class="screen">
+    <h1>TROLLFACE SECURITY</h1>
+    <img src="https://i.imgur.com/9n3x5fE.png" width="100"><br>
+    <input id="user" placeholder="Username" class="btn"><br>
+    <input id="pass" type="password" placeholder="Password" class="btn"><br>
+    <button onclick="login()" class="btn">LOGON</button>
   </div>
-  <canvas id="bonziCanvas" width="100" height="100" style="position:absolute; bottom:10px; right:10px; border:2px solid purple;"></canvas>
+  <div id="desktop" class="screen">
+    <h2>Welcome, <span id="userName"></span></h2>
+    <button onclick="showKiosk()" class="btn">FLIGHT KIOSK</button>
+    <button onclick="uploadChar()" class="btn">UPLOAD CHARACTER</button>
+    <button onclick="testSecurity()" class="btn">TEST SECURITY</button>
+    <canvas id="bonzi" width="100" height="100" style="position:absolute;bottom:10px;right:10px;border:2px solid purple;"></canvas>
+  </div>
+  <div id="kiosk" class="screen">
+    <h2>SELECT FIGHTER</h2>
+    <div id="charList"></div>
+    <button onclick="startGame()" class="btn">FIGHT</button>
+    <button onclick="backToDesktop()" class="btn">BACK</button>
+  </div>
 </div>
 
-<!-- KIOSK -->
-<div id="kiosk" class="window">
-  <h2>SELECT FIGHTER</h2>
-  <div id="charGrid"></div>
-  <button onclick="startFight()" class="btn">FIGHT!</button>
-</div>
-
-<!-- GAME -->
 <div id="game"></div>
 
 <script>
-  // === BOOT SEQUENCE ===
-  setTimeout(() => {
-    document.getElementById('boot').style.display = 'none';
-    document.getElementById('login').style.display = 'block';
-    document.getElementById('trollTune').play();
-  }, 5000);
+// === ALL JS BELOW THIS LINE ===
 
-  // === LOGIN ===
-  function login() {
-    const user = document.getElementById('username').value;
-    if (user) {
-      document.getElementById('trollTune').pause();
-      document.getElementById('baldiTune').play();
-      setTimeout(() => {
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('desktop').style.display = 'block';
-        initBonzi();
-      }, 2000);
-    }
-  }
+setTimeout(() => {
+  document.getElementById('boot').classList.remove('active');
+  document.getElementById('login').classList.add('active');
+}, 3000);
 
-  // === BONZI BUDDY ===
-  function initBonzi() {
-    const canvas = document.getElementById('bonziCanvas');
-    const ctx = canvas.getContext('2d');
-    let frame = 0;
-    setInterval(() => {
-      ctx.fillStyle = 'purple';
-      ctx.fillRect(0, 0, 100, 100);
-      ctx.fillStyle = 'white';
-      ctx.font = '20px Arial';
-      ctx.fillText(['Hello!', 'Upload a char!', 'Fight!'][frame % 3], 10, 50);
-      frame++;
-    }, 3000);
+let currentUser = '';
+function login() {
+  currentUser = document.getElementById('user').value;
+  if (currentUser) {
+    document.getElementById('userName').textContent = currentUser;
+    document.getElementById('login').classList.remove('active');
+    document.getElementById('desktop').classList.add('active');
+    initBonzi();
   }
+}
 
-  // === UPLOAD CHARACTER ===
-  function uploadChar() {
-    document.getElementById('charZip').click();
-  }
-  document.getElementById('charZip').addEventListener('change', async (e) => {
-    const zip = e.target.files[0];
-    const data = await JSZip.loadAsync(zip);
-    const frames = [];
-    for (let f in data.files) {
+function initBonzi() {
+  const c = document.getElementById('bonzi');
+  const ctx = c.getContext('2d');
+  let t = 0;
+  setInterval(() => {
+    ctx.clearRect(0, 0, 100, 100);
+    ctx.fillStyle = 'purple';
+    ctx.fillRect(0, 0, 100, 100);
+    ctx.fillStyle = 'white';
+    ctx.font = '12px Courier';
+    ctx.fillText(['Hi ' + currentUser + '!', 'Upload a fighter!', 'Ready to fight?'][t % 3], 5, 50);
+    t++;
+  }, 2000);
+}
+
+let characters = [{ name: 'TITUS', frames: Array.from({length:585},(_,i)=>`assets/titus/bmframe_noesisdupname_${8243+i}.png`) }];
+
+function uploadChar() {
+  const i = document.createElement('input');
+  i.type = 'file';
+  i.accept = '.zip';
+  i.onchange = async e => {
+    const z = e.target.files[0];
+    const d = await JSZip.loadAsync(z);
+    const c = { name: z.name.replace('.zip',''), frames: [] };
+    for (let f in d.files) {
       if (f.endsWith('.png')) {
-        const blob = await data.file(f).async('blob');
-        const url = URL.createObjectURL(blob);
-        frames.push(url);
+        const b = await d.file(f).async('blob');
+        c.frames.push(URL.createObjectURL(b));
       }
     }
-    characters.push({ name: zip.name, frames, palette: [] });
-    alert('Character uploaded!');
+    characters.push(c);
+    alert('Uploaded ' + c.name + '!');
+  };
+  i.click();
+}
+
+function showKiosk() {
+  document.getElementById('desktop').classList.remove('active');
+  document.getElementById('kiosk').classList.add('active');
+  const l = document.getElementById('charList');
+  l.innerHTML = '';
+  characters.forEach((c,i) => {
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.textContent = c.name;
+    b.onclick = () => selectedChar = i;
+    l.appendChild(b);
   });
+}
 
-  // === KIOSK ===
-  let characters = [{ name: 'TITUS', frames: Array.from({length:585},(_,i)=>`assets/titus/bmframe_noesisdupname_${8243+i}.png`) }];
-  function showKiosk() {
-    document.getElementById('desktop').style.display = 'none';
-    document.getElementById('kiosk').style.display = 'block';
-    const grid = document.getElementById('charGrid');
-    grid.innerHTML = '';
-    characters.forEach((c, i) => {
-      const div = document.createElement('div');
-      div.className = 'btn';
-      div.innerText = c.name;
-      div.onclick = () => selectChar(i);
-      grid.appendChild(div);
-    });
+let selectedChar = 0;
+
+function startGame() {
+  document.getElementById('kiosk').classList.remove('active');
+  document.getElementById('os').style.display = 'none';
+  document.getElementById('game').style.display = 'block';
+  initGame();
+}
+
+function backToDesktop() {
+  document.getElementById('kiosk').classList.remove('active');
+  document.getElementById('desktop').classList.add('active');
+}
+
+function initGame() {
+  new Phaser.Game({
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    parent: 'game',
+    physics: { default: 'arcade' },
+    scene: { preload, create, update }
+  });
+}
+
+function preload() {
+  characters[selectedChar].frames.forEach((f,i) => this.load.image(`f${i}`, f));
+}
+
+function create() {
+  this.add.text(400, 30, 'TROLLFACE FIGHTER', { font: '24px Courier', color: '#0f0' }).setOrigin(0.5);
+  const h = Math.floor(Math.random() * 24);
+  const sky = h < 6 ? '#000' : h < 12 ? '#87CEEB' : h < 18 ? '#FFD700' : '#191970';
+  this.add.rectangle(400, 300, 800, 600, sky).setOrigin(0.5);
+  const dir = Math.random() < 0.5 ? -1 : 1;
+  for (let i = 0; i < 3; i++) {
+    const c = this.add.circle(Math.random() * 800, Math.random() * 200, 30).setFillStyle(0xffffff, 0.7);
+    this.tweens.add({ targets: c, x: '+=' + (dir * 800), duration: 20000, repeat: -1 });
   }
-  let selectedChar = 0;
-  function selectChar(i) { selectedChar = i; }
+  this.player = this.physics.add.sprite(200, 500, 'f0').setScale(2);
+  this.enemy = this.physics.add.sprite(600, 500, 'f0').setScale(2).setFlipX(true);
+  this.inputBuffer = [];
+  this.keys = this.input.keyboard.addKeys('A,LEFT,RIGHT,UP,DOWN');
+}
 
-  // === FIGHT ENGINE ===
-  function startFight() {
-    document.getElementById('kiosk').style.display = 'none';
-    document.getElementById('game').style.display = 'block';
-    startPhaserGame();
+function update() {
+  if (this.keys.LEFT.isDown) this.player.x -= 3;
+  if (this.keys.RIGHT.isDown) this.player.x += 3;
+  if (this.keys.DOWN.isDown) this.inputBuffer.push('down');
+  if (this.keys.RIGHT.isDown) this.inputBuffer.push('right');
+  if (Phaser.Input.Keyboard.JustDown(this.keys.A)) this.inputBuffer.push('a');
+  if (this.inputBuffer.length > 8) this.inputBuffer.shift();
+
+  if (this.inputBuffer.includes('down') && this.inputBuffer.includes('right') && this.inputBuffer.includes('a')) {
+    this.add.text(400, 300, 'HADOUKEN!', { font: '48px Courier', color: '#00f' }).setOrigin(0.5).setLifetime(1000);
+    this.inputBuffer = [];
   }
 
-  function startPhaserGame() {
-    const config = {
-      type: Phaser.AUTO,
-      width: 800,
-      height: 600,
-      parent: 'game',
-      physics: { default: 'arcade' },
-      scene: { preload, create, update }
-    };
-    new Phaser.Game(config);
-  }
-
-  function preload() {
-    characters[selectedChar].frames.forEach((f,i) => this.load.image(`char_${i}`, f));
-  }
-
-  function create() {
-    this.add.text(400, 50, 'TITUS vs GOON', { font: '32px Courier', color: '#0f0' }).setOrigin(0.5);
-
-    // Sky
-    const sky = this.add.graphics();
-    const time = Math.random() * 4;
-    const colors = time < 1 ? ['#87CEEB','#00008B'] : time < 2 ? ['#FF4500','#8B0000'] : time < 3 ? ['#FFD700','#FFA500'] : ['#4682B4','#191970'];
-    sky.fillGradientStyle(...colors.map(c=>parseInt(c.slice(1),16)), 1,1,1,1);
-    sky.fillRect(0,0,800,300);
-
-    // Clouds
-    for (let i = 0; i < 5; i++) {
-      const cloud = this.add.image(Math.random()*800, Math.random()*200, 'char_0').setAlpha(0.5).setScale(2);
-      cloud.dir = Math.random() < 0.5 ? -1 : 1;
-      this.tweens.add({ targets: cloud, x: cloud.dir < 0 ? -200 : 1000, duration: 30000, repeat: -1 });
+  if (this.player.x < 100) {
+    this.player.setTint(0xff0000);
+    this.add.text(400, 300, 'YOUR REALLY GONNA REGRET THAT!', { font: '48px Courier', color: '#f00' }).setOrigin(0.5);
+    if (Math.random() < 0.1) {
+      this.add.text(400, 350, 'GET OVER HERE!', { font: '32px Courier', color: '#00f' }).setOrigin(0.5);
+      this.enemy.y -= 200;
+      this.add.text(400, 400, 'FATALITY!', { font: '64px Courier', color: '#f00' }).setOrigin(0.5);
     }
   }
+}
 
-  // === ANTI-HACKER ===
-  let tamperCount = 0;
-  function testSecurity() {
-    tamperCount = 0;
-    alert('Security OK!');
+// === ANTI-HACKER ===
+let tamper = 0;
+window.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'F12') tamper++;
+  if (tamper >= 2) {
+    document.body.innerHTML = '<h1 style="color:red">DON\'T YOU DARE!</h1>'.repeat(20);
   }
-  window.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-      tamperCount++;
-      if (tamperCount === 1) {
-        alert('Detected potential threat! Enter master key:');
-      } else if (tamperCount === 2) {
-        madmanMode();
-      }
-    }
-  });
+});
 
-  function madmanMode() {
-    document.body.innerHTML = '<h1 style="color:red">DON’T YOU DARE!</h1>'.repeat(100);
-    const audio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
-    setInterval(() => audio.play(), 100);
-  }
+function testSecurity() {
+  tamper = 0;
+  alert('Security OK');
+}
+
 </script>
 </body>
 </html>
